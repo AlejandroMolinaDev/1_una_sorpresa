@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Café en T'Art</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: una sola tarjeta centrada, estilo vitrina de pastelería con brillo Y2K.
+   Dos vistas (#invitacion / #aceptado) que se alternan sin recargar. */
+:root {
+  --bg: #ffd9ea;
+  --bg-dot: #ff9ccb;
+  --ink: #2a0a1c;
+  --pink: #ff2e93;
+  --berry: #b0125f;
+  --mint: #c9f2dd;
+  --paper: #fff8fb;
+  --display: "Bagel Fat One", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: var(--body);
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--bg-dot) 1.4px, transparent 1.6px);
+  background-size: 22px 22px;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+main {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+.card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 28px;
+  padding: 28px 24px 26px;
+  box-shadow: 8px 8px 0 var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.card[hidden] { display: none; }
+.tag {
+  align-self: flex-start;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  background: var(--mint);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 5px 12px;
+}
+h1 {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(38px, 11vw, 52px);
+  line-height: 1;
+  margin: 0;
+  color: var(--pink);
+  text-shadow: 3px 3px 0 var(--ink);
+  text-wrap: balance;
+}
+.lead { margin: 0; font-size: 17px; line-height: 1.45; max-width: 36ch; text-wrap: pretty; }
+.details { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.details li {
+  display: grid;
+  grid-template-columns: 82px 1fr;
+  gap: 12px;
+  align-items: baseline;
+  padding-bottom: 12px;
+  border-bottom: 2px dashed var(--bg-dot);
+}
+.details li:last-child { border-bottom: 0; padding-bottom: 0; }
+.k { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--berry); }
+.v { font-size: 16px; line-height: 1.35; font-weight: 500; }
+.v small { display: block; font-weight: 400; font-size: 13px; opacity: .75; margin-top: 2px; }
+.v a { color: inherit; text-decoration-color: var(--pink); text-underline-offset: 3px; text-decoration-thickness: 2px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.chips li {
+  font-size: 13px; font-weight: 500;
+  border: 2px solid var(--ink); border-radius: 999px;
+  padding: 4px 11px; background: #fff;
+}
+.chips li:nth-child(odd) { background: #ffe3f0; }
+.actions {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 132px;
+}
+button, .btn {
+  font-family: var(--body);
+  font-weight: 700;
+  font-size: 17px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  padding: 14px 26px;
+  cursor: pointer;
+  color: var(--ink);
+  text-decoration: none;
+  display: inline-block;
+  transition: transform .12s ease, box-shadow .12s ease;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+button:hover, .btn:hover { transform: translate(-1px, -1px); box-shadow: 6px 6px 0 var(--ink); }
+button:active, .btn:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+:focus-visible { outline: 3px solid var(--berry); outline-offset: 3px; }
+#si { background: var(--pink); color: #fff; transform-origin: center; transition: font-size .2s ease, padding .2s ease, transform .12s ease, box-shadow .12s ease; }
+#no { background: #fff; }
+#no.huida { position: fixed; z-index: 10; transition: left .25s cubic-bezier(.3,1.6,.5,1), top .25s cubic-bezier(.3,1.6,.5,1); }
+.nota { margin: 0; text-align: center; font-size: 14px; min-height: 1.3em; font-weight: 500; color: var(--berry); }
+.spark { position: absolute; width: 26px; height: 26px; pointer-events: none; animation: tw 2.6s ease-in-out infinite; }
+.spark.a { top: -14px; right: 26px; }
+.spark.b { top: 62px; right: -14px; width: 20px; height: 20px; animation-delay: .8s; }
+.spark.c { bottom: 80px; left: -14px; animation-delay: 1.5s; }
+@keyframes tw { 0%,100% { transform: scale(.7) rotate(0); opacity: .7; } 50% { transform: scale(1.15) rotate(25deg); opacity: 1; } }
+.big { font-family: var(--display); font-size: 64px; line-height: 1; margin: 0; }
+.back { background: transparent; box-shadow: none; border-width: 2px; font-size: 14px; padding: 9px 18px; align-self: center; }
+.back:hover { box-shadow: 3px 3px 0 var(--ink); }
+canvas#confeti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
+@media (prefers-reduced-motion: reduce) {
+  .spark { animation: none; }
+  #no.huida { transition: none; }
+  * { transition-duration: 0s !important; }
+}
+</style>
+</head>
+<body>
+<main>
+  <!-- Vista 1: la pregunta -->
+  <section class="card" id="vista-invitacion" aria-labelledby="titulo">
+    <svg class="spark a" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12z" fill="#ff2e93" stroke="#2a0a1c" stroke-width="1.5"/></svg>
+    <svg class="spark b" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12z" fill="#c9f2dd" stroke="#2a0a1c" stroke-width="1.5"/></svg>
+    <svg class="spark c" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12z" fill="#ffd9ea" stroke="#2a0a1c" stroke-width="1.5"/></svg>
+
+    <span class="tag">Invitación especial</span>
+    <h1 id="titulo">¿Te invito a un café?</h1>
+    <p class="lead">Un plan para los dos, mañana.</p>
+
+    <ul class="details">
+      <li>
+        <span class="k">6:00 p. m.</span>
+        <span class="v">Paso por ti<small>Miércoles 18 de noviembre</small></span>
+      </li>
+      <li>
+        <span class="k">Café</span>
+        <span class="v"><a href="https://www.google.com/maps/search/?api=1&amp;query=T%27Art+P%C3%A2tisserie+Plaza+Bukare+Morelia" target="_blank" rel="noopener">T'Art Pâtisserie</a><small>Plaza Bukare, Morelia</small></span>
+      </li>
+      <li>
+        <span class="k">Después</span>
+        <span class="v">Película de las Bratz<small>En tu casa</small></span>
+      </li>
+    </ul>
+
+    <div class="actions" id="actions">
+      <button type="button" id="si">Sí, acepto</button>
+      <button type="button" id="no">No</button>
+    </div>
+    <p class="nota" id="nota" aria-live="polite"></p>
+  </section>
+
+  <!-- Vista 2: aceptado -->
+  <section class="card" id="vista-aceptado" aria-labelledby="titulo2" hidden>
+    <svg class="spark a" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12z" fill="#ff2e93" stroke="#2a0a1c" stroke-width="1.5"/></svg>
+    <svg class="spark b" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12z" fill="#c9f2dd" stroke="#2a0a1c" stroke-width="1.5"/></svg>
+
+    <span class="tag">Cita confirmada</span>
+    <p class="big" aria-hidden="true">✦</p>
+    <h1 id="titulo2">¡Aceptado!</h1>
+    <p class="lead">Ya quedó. Nos vemos mañana.</p>
+
+    <ul class="details">
+      <li>
+        <span class="k">6:00 p. m.</span>
+        <span class="v">Paso por ti<small>Miércoles 18 de noviembre</small></span>
+      </li>
+      <li>
+        <span class="k">Café</span>
+        <span class="v">T'Art Pâtisserie<small>Plaza Bukare, Morelia</small></span>
+      </li>
+      <li>
+        <span class="k">Después</span>
+        <span class="v">Película de las Bratz<small>En tu casa</small></span>
+      </li>
+    </ul>
+
+    <a class="btn" id="avisar" href="#" target="_blank" rel="noopener" hidden style="background:var(--mint);text-align:center">Avisarle que sí voy</a>
+    <button type="button" class="back" id="volver">Ver la invitación otra vez</button>
+  </section>
+</main>
+<canvas id="confeti" aria-hidden="true"></canvas>
+
+<script>
+(function () {
+  // Opcional: número de WhatsApp de Alejandro con lada (ej. "524431234567").
+  // Si se llena, la pantalla de aceptado muestra un botón para avisarle.
+  var WHATSAPP = "";
+
+  var vInv = document.getElementById("vista-invitacion");
+  var vOk = document.getElementById("vista-aceptado");
+  var si = document.getElementById("si");
+  var no = document.getElementById("no");
+  var nota = document.getElementById("nota");
+  var actions = document.getElementById("actions");
+  var avisar = document.getElementById("avisar");
+  var intentos = 0;
+  var frases = [
+    "",
+    "Ay, qué rápida eres.",
+    "¿Segura? Hay macarons.",
+    "Mira que hay tarta de frambuesa.",
+    "Ese botón está difícil de atrapar.",
+    "Ya mejor di que sí.",
+    "Se está haciendo pequeño de la pena.",
+    "Última oportunidad de decir que sí."
+  ];
+
+  if (WHATSAPP) {
+    avisar.hidden = false;
+    avisar.href = "https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent("¡Sí acepto! Nos vemos mañana a las 6 en T'Art ✦");
+  }
+
+  function huir() {
+    intentos++;
+    nota.textContent = frases[Math.min(intentos, frases.length - 1)];
+    // El botón "No" se vuelve más pequeño y el "Sí" crece.
+    var escala = Math.max(0.55, 1 - intentos * 0.07);
+    no.style.fontSize = (17 * escala) + "px";
+    no.style.padding = (14 * escala) + "px " + (26 * escala) + "px";
+    si.style.fontSize = Math.min(30, 17 + intentos * 1.6) + "px";
+    si.style.padding = Math.min(22, 14 + intentos * 1.2) + "px " + Math.min(40, 26 + intentos * 2) + "px";
+
+    no.classList.add("huida");
+    var w = no.offsetWidth, h = no.offsetHeight;
+    var maxX = window.innerWidth - w - 12;
+    var maxY = window.innerHeight - h - 12;
+    var bx = si.getBoundingClientRect();
+    var x, y, tries = 0;
+    do {
+      x = 12 + Math.random() * Math.max(0, maxX - 12);
+      y = 12 + Math.random() * Math.max(0, maxY - 12);
+      tries++;
+    } while (tries < 25 &&
+      x < bx.right + 16 && x + w > bx.left - 16 && y < bx.bottom + 16 && y + h > bx.top - 16);
+    no.style.left = x + "px";
+    no.style.top = y + "px";
+  }
+
+  // Primero se coloca en su lugar de origen para que el salto parta de ahí.
+  function anclar() {
+    if (no.classList.contains("huida")) return;
+    var r = no.getBoundingClientRect();
+    var ph = document.createElement("span");
+    ph.style.cssText = "display:inline-block;width:" + r.width + "px;height:" + r.height + "px";
+    ph.id = "ph";
+    no.parentNode.insertBefore(ph, no);
+    no.style.left = r.left + "px";
+    no.style.top = r.top + "px";
+  }
+
+  function intentar(e) {
+    if (e) e.preventDefault();
+    anclar();
+    // Forzar reflow para que la transición arranque desde la posición inicial.
+    void no.offsetWidth;
+    huir();
+  }
+
+  no.addEventListener("pointerenter", function (e) { if (e.pointerType === "mouse") intentar(e); });
+  no.addEventListener("pointerdown", intentar);
+  no.addEventListener("click", intentar);
+  no.addEventListener("focus", intentar);
+  window.addEventListener("resize", function () {
+    if (no.classList.contains("huida")) {
+      no.style.left = Math.min(parseFloat(no.style.left), window.innerWidth - no.offsetWidth - 12) + "px";
+      no.style.top = Math.min(parseFloat(no.style.top), window.innerHeight - no.offsetHeight - 12) + "px";
+    }
+  });
+
+  function mostrar() {
+    var ok = location.hash === "#aceptado";
+    vInv.hidden = ok;
+    vOk.hidden = !ok;
+    window.scrollTo(0, 0);
+    if (ok) lanzarConfeti();
+  }
+
+  si.addEventListener("click", function () { location.hash = "aceptado"; });
+  document.getElementById("volver").addEventListener("click", function () {
+    location.hash = "";
+    history.replaceState(null, "", location.pathname + location.search);
+    mostrar();
+  });
+  window.addEventListener("hashchange", mostrar);
+
+  // Confeti rosa con canvas, se apaga solo.
+  var cv = document.getElementById("confeti");
+  var cx = cv.getContext("2d");
+  var raf = null;
+  function lanzarConfeti() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    cv.width = window.innerWidth; cv.height = window.innerHeight;
+    var colores = ["#ff2e93", "#ff9ccb", "#c9f2dd", "#2a0a1c", "#ffffff", "#b0125f"];
+    var piezas = [];
+    for (var i = 0; i < 140; i++) {
+      piezas.push({
+        x: Math.random() * cv.width, y: -20 - Math.random() * cv.height * 0.6,
+        w: 6 + Math.random() * 7, h: 8 + Math.random() * 8,
+        vy: 2 + Math.random() * 3.5, vx: -1.5 + Math.random() * 3,
+        r: Math.random() * 6, vr: -0.2 + Math.random() * 0.4,
+        c: colores[i % colores.length]
+      });
+    }
+    var inicio = performance.now();
+    cancelAnimationFrame(raf);
+    (function paso(t) {
+      cx.clearRect(0, 0, cv.width, cv.height);
+      piezas.forEach(function (p) {
+        p.x += p.vx; p.y += p.vy; p.r += p.vr;
+        cx.save(); cx.translate(p.x, p.y); cx.rotate(p.r);
+        cx.fillStyle = p.c; cx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        cx.restore();
+      });
+      if (t - inicio < 4200) raf = requestAnimationFrame(paso);
+      else cx.clearRect(0, 0, cv.width, cv.height);
+    })(inicio);
+  }
+
+  mostrar();
+})();
+</script>
+</body>
+</html>
